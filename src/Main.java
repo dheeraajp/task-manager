@@ -1,36 +1,27 @@
-import com.sun.net.httpserver.HttpServer;
-import java.io.IOException;
-import java.net.InetSocketAddress;
+import java.time.LocalDate;
+import model.Priority;
+import model.Task;
 
 public class Main {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
 
-        HttpServer server = HttpServer.create(
-                new InetSocketAddress(8080),
-                0
+        Task task = new Task(
+                1,
+                "Finish CS homework",
+                LocalDate.of(2026, 8, 15),
+                Priority.HIGH
         );
 
-        server.createContext("/", exchange -> {
+        System.out.println("Name: " + task.getName());
+        System.out.println("Due: " + task.getDueDate());
+        System.out.println("Priority: " + task.getPriority());
+        System.out.println("Completed: " + task.isCompleted());
 
-            String response = "Hello from my Java Task Manager!";
-
-            exchange.sendResponseHeaders(
-                    200,
-                    response.getBytes().length
-            );
-
-            exchange.getResponseBody().write(
-                    response.getBytes()
-            );
-
-            exchange.getResponseBody().close();
-        });
-
-        server.start();
+        task.markCompleted();
 
         System.out.println(
-                "Server running at http://localhost:8080"
+                "Completed after update: " + task.isCompleted()
         );
     }
 }
