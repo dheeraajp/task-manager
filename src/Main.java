@@ -1,10 +1,23 @@
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import java.time.LocalDate;
+
 import model.Priority;
 import model.Task;
+import util.LocalDateAdapter;
 
 public class Main {
 
     public static void main(String[] args) {
+
+        Gson gson = new GsonBuilder()
+                .registerTypeAdapter(
+                        LocalDate.class,
+                        new LocalDateAdapter()
+                )
+                .setPrettyPrinting()
+                .create();
 
         Task task = new Task(
                 1,
@@ -13,15 +26,17 @@ public class Main {
                 Priority.HIGH
         );
 
-        System.out.println("Name: " + task.getName());
-        System.out.println("Due: " + task.getDueDate());
-        System.out.println("Priority: " + task.getPriority());
-        System.out.println("Completed: " + task.isCompleted());
+        String json = gson.toJson(task);
 
-        task.markCompleted();
+        System.out.println(json);
 
-        System.out.println(
-                "Completed after update: " + task.isCompleted()
-        );
+        Task loadedTask = gson.fromJson(json, Task.class);
+
+        System.out.println();
+        System.out.println("Loaded task:");
+        System.out.println("Name: " + loadedTask.getName());
+        System.out.println("Due: " + loadedTask.getDueDate());
+        System.out.println("Priority: " + loadedTask.getPriority());
+        System.out.println("Completed: " + loadedTask.isCompleted());
     }
 }
