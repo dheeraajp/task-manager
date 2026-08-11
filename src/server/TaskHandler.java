@@ -6,8 +6,8 @@ import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-import model.Task;
 import model.CreateTaskRequest;
+import model.Task;
 import service.TaskService;
 import util.LocalDateAdapter;
 
@@ -47,6 +47,10 @@ public class TaskHandler implements HttpHandler {
 
             handlePost(exchange);
 
+        } else if (method.equals("PUT")) {
+
+            handlePut(exchange);
+
         } else {
 
             sendResponse(
@@ -60,8 +64,7 @@ public class TaskHandler implements HttpHandler {
     private void handleGet(HttpExchange exchange)
             throws IOException {
 
-        List<Task> tasks =
-                taskService.getAllTasks();
+        List<Task> tasks = taskService.getAllTasks();
 
         String json = gson.toJson(tasks);
 
@@ -75,11 +78,10 @@ public class TaskHandler implements HttpHandler {
                 exchange.getRequestBody().readAllBytes()
         );
 
-        CreateTaskRequest request =
-                gson.fromJson(
-                        requestBody,
-                        CreateTaskRequest.class
-                );
+        CreateTaskRequest request = gson.fromJson(
+                requestBody,
+                CreateTaskRequest.class
+        );
 
         Task task = taskService.addTask(
                 request.getName(),
@@ -90,6 +92,61 @@ public class TaskHandler implements HttpHandler {
         String json = gson.toJson(task);
 
         sendResponse(exchange, 201, json);
+    }
+
+    private void handlePut(HttpExchange exchange)
+            throws IOException {
+
+        String path = exchange.getRequestURI().getPath();
+
+        String[] parts = path.split("/");
+
+        if (parts.length != 4) {
+
+            sendResponse(
+                    exchange,
+                    400,
+                    "{\"error\":\"Invalid task ID\"}"
+            );
+
+            return;
+        }
+
+        int id;
+
+        try {
+
+            id = Integer.parseInt(parts[3]);
+
+        } catch (NumberFormatException e) {
+
+            sendResponse(
+                    exchange,
+                    400,
+                    "{\"error\":\"Invalid task ID\"}"
+            );
+
+            return;
+        }
+
+        boolean completed = taskService.completeTask(id);
+
+        if (!completed) {
+
+            sendResponse(
+                    exchange,
+                    404,
+                    "{\"error\":\"Task not found\"}"
+            );
+
+            return;
+        }
+
+        sendResponse(
+                exchange,
+                200,
+                "{\"message\":\"Task completed\"}"
+        );
     }
 
     private void sendResponse(
@@ -103,16 +160,14 @@ public class TaskHandler implements HttpHandler {
                 "application/json"
         );
 
-        byte[] responseBytes =
-                response.getBytes();
+        byte[] responseBytes = response.getBytes();
 
         exchange.sendResponseHeaders(
                 statusCode,
                 responseBytes.length
         );
 
-        OutputStream output =
-                exchange.getResponseBody();
+        OutputStream output = exchange.getResponseBody();
 
         output.write(responseBytes);
 
