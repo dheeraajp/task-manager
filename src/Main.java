@@ -1,42 +1,38 @@
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
-import java.time.LocalDate;
-
-import model.Priority;
-import model.Task;
-import util.LocalDateAdapter;
+import com.sun.net.httpserver.HttpServer;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import repository.TaskRepository;
+import server.TaskHandler;
+import service.TaskService;
 
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args)
+            throws IOException {
 
-        Gson gson = new GsonBuilder()
-                .registerTypeAdapter(
-                        LocalDate.class,
-                        new LocalDateAdapter()
-                )
-                .setPrettyPrinting()
-                .create();
+        TaskRepository repository =
+                new TaskRepository(
+                        "data/tasks.json"
+                );
 
-        Task task = new Task(
-                1,
-                "Finish CS homework",
-                LocalDate.of(2026, 8, 15),
-                Priority.HIGH
+        TaskService service =
+                new TaskService(repository);
+
+        HttpServer server =
+                HttpServer.create(
+                        new InetSocketAddress(8080),
+                        0
+                );
+
+        server.createContext(
+                "/api/tasks",
+                new TaskHandler(service)
         );
 
-        String json = gson.toJson(task);
+        server.start();
 
-        System.out.println(json);
-
-        Task loadedTask = gson.fromJson(json, Task.class);
-
-        System.out.println();
-        System.out.println("Loaded task:");
-        System.out.println("Name: " + loadedTask.getName());
-        System.out.println("Due: " + loadedTask.getDueDate());
-        System.out.println("Priority: " + loadedTask.getPriority());
-        System.out.println("Completed: " + loadedTask.isCompleted());
+        System.out.println(
+                "Server running at http://localhost:8080"
+        );
     }
 }

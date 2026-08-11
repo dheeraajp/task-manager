@@ -1,1 +1,16 @@
-[]
+[
+  {
+    "id": 1,
+    "name": "Finish CS homework",
+    "dueDate": "2026-08-15",
+    "priority": "HIGH",
+    "completed": false
+  },
+  {
+    "id": 2,
+    "name": "Apply for internship",
+    "dueDate": "2026-08-20",
+    "priority": "MEDIUM",
+    "completed": false
+  }
+]
