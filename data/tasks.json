@@ -12,5 +12,12 @@
     "dueDate": "2026-08-20",
     "priority": "MEDIUM",
     "completed": false
+  },
+  {
+    "id": 3,
+    "name": "Prepare for interview",
+    "dueDate": "2026-08-20",
+    "priority": "HIGH",
+    "completed": false
   }
 ]

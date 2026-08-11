@@ -7,6 +7,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
 import model.Task;
+import model.CreateTaskRequest;
 import service.TaskService;
 import util.LocalDateAdapter;
 
@@ -36,12 +37,18 @@ public class TaskHandler implements HttpHandler {
     public void handle(HttpExchange exchange)
             throws IOException {
 
-        String method =
-                exchange.getRequestMethod();
+        String method = exchange.getRequestMethod();
 
         if (method.equals("GET")) {
+
             handleGet(exchange);
+
+        } else if (method.equals("POST")) {
+
+            handlePost(exchange);
+
         } else {
+
             sendResponse(
                     exchange,
                     405,
@@ -59,6 +66,30 @@ public class TaskHandler implements HttpHandler {
         String json = gson.toJson(tasks);
 
         sendResponse(exchange, 200, json);
+    }
+
+    private void handlePost(HttpExchange exchange)
+            throws IOException {
+
+        String requestBody = new String(
+                exchange.getRequestBody().readAllBytes()
+        );
+
+        CreateTaskRequest request =
+                gson.fromJson(
+                        requestBody,
+                        CreateTaskRequest.class
+                );
+
+        Task task = taskService.addTask(
+                request.getName(),
+                request.getDueDate(),
+                request.getPriority()
+        );
+
+        String json = gson.toJson(task);
+
+        sendResponse(exchange, 201, json);
     }
 
     private void sendResponse(
