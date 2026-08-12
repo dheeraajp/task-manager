@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDate;
 import java.util.List;
+import model.ErrorResponse;
 
 public class TaskHandler implements HttpHandler {
 
@@ -79,32 +80,69 @@ public class TaskHandler implements HttpHandler {
         );
     }
 
-    private void handlePost(HttpExchange exchange)
-            throws IOException {
+        private void handlePost(HttpExchange exchange)
+                throws IOException {
 
-        String requestBody = new String(
-                exchange.getRequestBody().readAllBytes()
-        );
+        try {
 
-        CreateTaskRequest request = gson.fromJson(
-                requestBody,
-                CreateTaskRequest.class
-        );
+                String requestBody = new String(
+                        exchange.getRequestBody().readAllBytes()
+                );
 
-        Task task = taskService.addTask(
-                request.getName(),
-                request.getDueDate(),
-                request.getPriority()
-        );
+                CreateTaskRequest request =
+                        gson.fromJson(
+                                requestBody,
+                                CreateTaskRequest.class
+                        );
 
-        String json = gson.toJson(task);
+                if (request == null) {
 
-        sendResponse(
-                exchange,
-                201,
-                json
-        );
-    }
+                sendResponse(
+                        exchange,
+                        400,
+                        "{\"error\":\"Invalid request\"}"
+                );
+
+                return;
+                }
+
+                Task task = taskService.addTask(
+                        request.getName(),
+                        request.getDueDate(),
+                        request.getPriority()
+                );
+
+                String json = gson.toJson(task);
+
+                sendResponse(
+                        exchange,
+                        201,
+                        json
+                );
+
+        } catch (IllegalArgumentException e) {
+
+                String errorJson = gson.toJson(
+                        new ErrorResponse(
+                                e.getMessage()
+                        )
+                );
+
+                sendResponse(
+                        exchange,
+                        400,
+                        errorJson
+                );
+
+        } catch (RuntimeException e) {
+
+                sendResponse(
+                        exchange,
+                        400,
+                        "{\"error\":\"Invalid JSON request\"}"
+                );
+        }
+        }
 
     private void handlePut(HttpExchange exchange)
             throws IOException {

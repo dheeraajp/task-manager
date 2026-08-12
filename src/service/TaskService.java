@@ -1,13 +1,12 @@
 package service;
 
-import model.Priority;
-import model.Task;
-import repository.TaskRepository;
-
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import model.Priority;
+import model.Task;
+import repository.TaskRepository;
 
 public class TaskService {
 
@@ -32,11 +31,29 @@ public class TaskService {
             Priority priority
     ) throws IOException {
 
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Task name is required"
+            );
+        }
+
+        if (dueDate == null) {
+            throw new IllegalArgumentException(
+                    "Due date is required"
+            );
+        }
+
+        if (priority == null) {
+            throw new IllegalArgumentException(
+                    "Priority is required"
+            );
+        }
+
         int id = generateNextId();
 
         Task task = new Task(
                 id,
-                name,
+                name.trim(),
                 dueDate,
                 priority
         );
