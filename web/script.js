@@ -81,9 +81,8 @@ function renderTasks(tasks) {
     taskList.innerHTML = "";
 
     if (tasks.length === 0) {
-
         taskList.innerHTML =
-                "<p>No tasks yet.</p>";
+            "<p>No tasks yet.</p>";
 
         return;
     }
@@ -91,20 +90,16 @@ function renderTasks(tasks) {
     for (const task of tasks) {
 
         const taskElement =
-                document.createElement("div");
+            document.createElement("div");
 
         taskElement.classList.add("task");
 
         taskElement.innerHTML = `
             <h3>${task.name}</h3>
 
-            <p>
-                Due: ${task.dueDate}
-            </p>
+            <p>Due: ${task.dueDate}</p>
 
-            <p>
-                Priority: ${task.priority}
-            </p>
+            <p>Priority: ${task.priority}</p>
 
             <p>
                 Status:
@@ -112,10 +107,99 @@ function renderTasks(tasks) {
                     ? "Completed"
                     : "Active"}
             </p>
+
+            ${
+                !task.completed
+                    ? `<button class="complete-button">
+                           Complete
+                       </button>`
+                    : ""
+            }
+
+            <button class="delete-button">
+                Delete
+            </button>
         `;
 
-        taskList.appendChild(
-            taskElement
+        const completeButton =
+            taskElement.querySelector(
+                ".complete-button"
+            );
+
+        if (completeButton) {
+
+            completeButton.addEventListener(
+                "click",
+                () => completeTask(task.id)
+            );
+        }
+
+        const deleteButton =
+            taskElement.querySelector(
+                ".delete-button"
+            );
+
+        deleteButton.addEventListener(
+            "click",
+            () => deleteTask(task.id)
+        );
+
+        taskList.appendChild(taskElement);
+    }
+}
+
+async function completeTask(id) {
+
+    try {
+
+        const response = await fetch(
+            `/api/tasks/${id}`,
+            {
+                method: "PUT"
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(
+                "Failed to complete task"
+            );
+        }
+
+        await loadTasks();
+
+    } catch (error) {
+
+        console.error(
+            "Error completing task:",
+            error
+        );
+    }
+}
+
+async function deleteTask(id) {
+
+    try {
+
+        const response = await fetch(
+            `/api/tasks/${id}`,
+            {
+                method: "DELETE"
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(
+                "Failed to delete task"
+            );
+        }
+
+        await loadTasks();
+
+    } catch (error) {
+
+        console.error(
+            "Error deleting task:",
+            error
         );
     }
 }
