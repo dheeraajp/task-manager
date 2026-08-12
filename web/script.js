@@ -5,8 +5,37 @@ const taskNameInput = document.getElementById("task-name");
 const dueDateInput = document.getElementById("due-date");
 const priorityInput = document.getElementById("priority");
 
-taskForm.addEventListener("submit", handleAddTask);
+const filterButtons =
+    document.querySelectorAll("[data-filter]");
 
+let allTasks = [];
+let currentFilter = "all";
+
+
+// Add Task form
+taskForm.addEventListener(
+    "submit",
+    handleAddTask
+);
+
+
+// Filter buttons
+for (const button of filterButtons) {
+
+    button.addEventListener(
+        "click",
+        () => {
+
+            currentFilter =
+                button.dataset.filter;
+
+            applyCurrentFilter();
+        }
+    );
+}
+
+
+// CREATE TASK
 async function handleAddTask(event) {
 
     event.preventDefault();
@@ -19,18 +48,26 @@ async function handleAddTask(event) {
 
     try {
 
-        const response = await fetch("/api/tasks", {
-            method: "POST",
+        const response = await fetch(
+            "/api/tasks",
+            {
+                method: "POST",
 
-            headers: {
-                "Content-Type": "application/json"
-            },
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
 
-            body: JSON.stringify(newTask)
-        });
+                body:
+                    JSON.stringify(newTask)
+            }
+        );
 
         if (!response.ok) {
-            throw new Error("Failed to create task");
+
+            throw new Error(
+                "Failed to create task"
+            );
         }
 
         taskForm.reset();
@@ -46,23 +83,26 @@ async function handleAddTask(event) {
     }
 }
 
+
+// LOAD TASKS
 async function loadTasks() {
 
     try {
 
         const response =
-                await fetch("/api/tasks");
+            await fetch("/api/tasks");
 
         if (!response.ok) {
+
             throw new Error(
                 "Failed to load tasks"
             );
         }
 
-        const tasks =
-                await response.json();
+        allTasks =
+            await response.json();
 
-        renderTasks(tasks);
+        applyCurrentFilter();
 
     } catch (error) {
 
@@ -72,15 +112,78 @@ async function loadTasks() {
         );
 
         taskList.innerHTML =
-                "<p>Could not load tasks.</p>";
+            "<p>Could not load tasks.</p>";
     }
 }
 
+
+// FILTER TASKS
+function applyCurrentFilter() {
+
+    let filteredTasks;
+
+    if (currentFilter === "active") {
+
+        filteredTasks =
+            allTasks.filter(
+                task => !task.completed
+            );
+
+    } else if (
+        currentFilter === "completed"
+    ) {
+
+        filteredTasks =
+            allTasks.filter(
+                task => task.completed
+            );
+
+    } else if (
+        currentFilter === "overdue"
+    ) {
+
+        const today = new Date();
+
+        today.setHours(
+            0,
+            0,
+            0,
+            0
+        );
+
+        filteredTasks =
+            allTasks.filter(
+                task => {
+
+                    const dueDate =
+                        new Date(
+                            task.dueDate
+                            + "T00:00:00"
+                        );
+
+                    return (
+                        !task.completed
+                        && dueDate < today
+                    );
+                }
+            );
+
+    } else {
+
+        filteredTasks = allTasks;
+    }
+
+    renderTasks(filteredTasks);
+}
+
+
+// DISPLAY TASKS
 function renderTasks(tasks) {
 
     taskList.innerHTML = "";
 
     if (tasks.length === 0) {
+
         taskList.innerHTML =
             "<p>No tasks yet.</p>";
 
@@ -92,35 +195,53 @@ function renderTasks(tasks) {
         const taskElement =
             document.createElement("div");
 
-        taskElement.classList.add("task");
+        taskElement.classList.add(
+            "task"
+        );
 
         taskElement.innerHTML = `
-            <h3>${task.name}</h3>
+            <h3>
+                ${task.name}
+            </h3>
 
-            <p>Due: ${task.dueDate}</p>
+            <p>
+                Due: ${task.dueDate}
+            </p>
 
-            <p>Priority: ${task.priority}</p>
+            <p>
+                Priority: ${task.priority}
+            </p>
 
             <p>
                 Status:
-                ${task.completed
-                    ? "Completed"
-                    : "Active"}
+                ${
+                    task.completed
+                        ? "Completed"
+                        : "Active"
+                }
             </p>
 
             ${
                 !task.completed
-                    ? `<button class="complete-button">
-                           Complete
-                       </button>`
+                    ? `
+                        <button
+                            class="complete-button"
+                        >
+                            Complete
+                        </button>
+                    `
                     : ""
             }
 
-            <button class="delete-button">
+            <button
+                class="delete-button"
+            >
                 Delete
             </button>
         `;
 
+
+        // Complete button
         const completeButton =
             taskElement.querySelector(
                 ".complete-button"
@@ -134,6 +255,8 @@ function renderTasks(tasks) {
             );
         }
 
+
+        // Delete button
         const deleteButton =
             taskElement.querySelector(
                 ".delete-button"
@@ -144,22 +267,29 @@ function renderTasks(tasks) {
             () => deleteTask(task.id)
         );
 
-        taskList.appendChild(taskElement);
+
+        taskList.appendChild(
+            taskElement
+        );
     }
 }
 
+
+// COMPLETE TASK
 async function completeTask(id) {
 
     try {
 
-        const response = await fetch(
-            `/api/tasks/${id}`,
-            {
-                method: "PUT"
-            }
-        );
+        const response =
+            await fetch(
+                `/api/tasks/${id}`,
+                {
+                    method: "PUT"
+                }
+            );
 
         if (!response.ok) {
+
             throw new Error(
                 "Failed to complete task"
             );
@@ -176,18 +306,22 @@ async function completeTask(id) {
     }
 }
 
+
+// DELETE TASK
 async function deleteTask(id) {
 
     try {
 
-        const response = await fetch(
-            `/api/tasks/${id}`,
-            {
-                method: "DELETE"
-            }
-        );
+        const response =
+            await fetch(
+                `/api/tasks/${id}`,
+                {
+                    method: "DELETE"
+                }
+            );
 
         if (!response.ok) {
+
             throw new Error(
                 "Failed to delete task"
             );
@@ -204,4 +338,6 @@ async function deleteTask(id) {
     }
 }
 
+
+// Load tasks when page first opens
 loadTasks();
